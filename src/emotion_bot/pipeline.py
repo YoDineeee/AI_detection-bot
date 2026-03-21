@@ -1,19 +1,17 @@
-#wires everything  together
-
+# wires everything together
 import signal
-import time 
+import time
 from config.settings import settings
-from src.emotion_bot.camera import Camera
-from src.emotion_bot.detector   import EmotionDetector
-from src.emotion_bot.publisher  import MqttPublisher
-from src.emotion_bot.subscriber import MqttSubscriber
-from src.emotion_bot.notifier   import TelegramNotifier
-
+from src.emotion_bot.camera      import Camera
+from src.emotion_bot.detector    import EmotionDetector
+from src.emotion_bot.publisher   import MqttPublisher
+from src.emotion_bot.subscriber  import MqttSubscriber
+from src.emotion_bot.notifier    import TelegramNotifier
 
 class Pipeline:
-    def __init__(self) ->None:
-        self._camera = Camera(settings.CAMERA_INDEX)
-        self._detector = EmotionDetector()
+    def __init__(self) -> None:
+        self._camera     = Camera(settings.CAMERA_INDEX)
+        self._detector   = EmotionDetector()
         self._publisher  = MqttPublisher()
         self._notifier   = TelegramNotifier()
         self._subscriber = MqttSubscriber(
@@ -22,12 +20,9 @@ class Pipeline:
         )
         self._running = False
 
-    
-
     def run(self) -> None:
         signal.signal(signal.SIGINT,  self._handle_stop)
         signal.signal(signal.SIGTERM, self._handle_stop)
-
         self._running = True
 
         with self._camera, self._publisher, self._subscriber:
@@ -42,10 +37,8 @@ class Pipeline:
                     continue
 
                 result = self._detector.detect(frame)
-
                 if result and result.face_found:
-                    print(f"[Pipeline] {result.emotion} "
-                          f"({result.confidence:.1f}%)")
+                    print(f"[Pipeline] {result.emotion} ({result.confidence:.1f}%)")
                     self._publisher.publish_emotion(
                         result.emotion,
                         result.confidence
@@ -58,5 +51,3 @@ class Pipeline:
     def _handle_stop(self, *args) -> None:
         print("\n[Pipeline] Stopping...")
         self._running = False
-
-        

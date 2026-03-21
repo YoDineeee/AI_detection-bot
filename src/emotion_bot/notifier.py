@@ -1,9 +1,8 @@
-#sends telegram messages
+# sends telegram messages
 import asyncio
-from telegram import Bot 
+from telegram import Bot
 from telegram.error import TelegramError
 from config.settings import settings
-
 
 EMOTION_EMOJI = {
     "happy":    "😊",
@@ -16,17 +15,18 @@ EMOTION_EMOJI = {
     "unknown":  "❓",
 }
 
-async def _send(self, text: str ) -> None:
-    try:
-        await self._bot.send_message(chat_id = self._chat_id, text =text)
-    except  TelegramError as e:
-          print(f"[Notifier] Failed to send: {e}")
+class TelegramNotifier:
+    def __init__(self) -> None:
+        self._bot     = Bot(token=settings.TELEGRAM_TOKEN)
+        self._chat_id = settings.TELEGRAM_CHAT_ID
 
-     
-     
- def notify_emotion(self, emotion: str,
-                       confidence: float,
-                       timestamp: str) -> None:
+    async def _send(self, text: str) -> None:
+        try:
+            await self._bot.send_message(chat_id=self._chat_id, text=text)
+        except TelegramError as e:
+            print(f"[Notifier] Failed to send: {e}")
+
+    def notify_emotion(self, emotion: str, confidence: float, timestamp: str) -> None:
         emoji = EMOTION_EMOJI.get(emotion, "❓")
         text  = (
             f"{emoji} Emotion Detected\n"
