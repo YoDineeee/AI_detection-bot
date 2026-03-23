@@ -1,9 +1,9 @@
-# publishes to a broker
+
 import json
-import time
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 from config.settings import settings
+
 
 class MqttPublisher:
     def __init__(self) -> None:
@@ -24,17 +24,17 @@ class MqttPublisher:
         start = time.time()
         while not self._connected and time.time() - start < timeout:
             time.sleep(0.1)
-
         if not self._connected:
             raise RuntimeError("Could not connect to broker")
 
-    def publish_emotion(self, emotion: str, confidence: float) -> None:
-        payload = json.dumps({
-            "emotion": emotion,
-            "confidence": round(float(confidence), 2), 
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
-        self._client.publish(settings.TOPIC_EMOTIONS, payload, qos=1)
+    def publish_face_event(self, event: dict) -> None:
+        payload = json.dumps(event, separators=(",", ":"))  # compact
+        self._client.publish(
+            topic=settings.TOPIC_EMOTIONS,
+            payload=payload,
+            qos=1
+        )
+        print(f"[Publisher] → {settings.TOPIC_EMOTIONS}  ({len(payload)} bytes)")
 
     def publish_health(self, status: str) -> None:
         payload = json.dumps({
