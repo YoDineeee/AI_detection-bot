@@ -1,23 +1,29 @@
-# Deepface emotion detection
 from dataclasses import dataclass
 from typing import Optional
 import numpy as np
+import cv2
 from deepface import DeepFace
 
 @dataclass
 class DetectionResult:
-    emotion:    str
+    emotion: str
     confidence: float
     face_found: bool
 
 class EmotionDetector:
     def detect(self, frame: np.ndarray) -> Optional[DetectionResult]:
         try:
+            # Preprocessing for better lighting and accuracy
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray_eq = cv2.equalizeHist(gray)
+            enhanced = cv2.cvtColor(gray_eq, cv2.COLOR_GRAY2BGR)
+
             results = DeepFace.analyze(
-                frame,
+                enhanced,
                 actions=["emotion"],
                 enforce_detection=False,
-                silent=True
+                silent=True,
+                detector_backend="retinaface"
             )
 
             if not results:
